@@ -4,7 +4,7 @@ import kotlinx.serialization.SerialName
 
 data class AuthorResponse(
     @SerialName(value = "id") val userID: Long,
-    val username: String,
-    val profileImageUrl: String?
+    @SerialName(value = "username") val username: String,
+    @SerialName(value = "profileImageUrl") val profileImageUrl: String?
 )
 

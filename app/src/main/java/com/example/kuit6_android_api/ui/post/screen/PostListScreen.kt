@@ -23,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kuit6_android_api.ui.post.component.PostItem
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.data.model.response.AuthorResponse
+import com.example.kuit6_android_api.data.model.response.PostResponse
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

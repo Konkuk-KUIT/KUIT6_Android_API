@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCreateScreen(
@@ -187,8 +188,8 @@ fun PostCreateScreen(
 
             Button(
                 onClick = {
-                    val finalAuthor = author.ifBlank { "anonymous" }
-                    viewModel.createPost(finalAuthor, title, content, null) {
+                    val finalAuthor = author
+                    viewModel.createPost(finalAuthor, title, content,null) {
                         onPostCreated()
                     }
                 },

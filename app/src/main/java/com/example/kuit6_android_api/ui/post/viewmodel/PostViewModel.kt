@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.kuit6_android_api.data.api.RetrofitClient
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.PostResponse
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 

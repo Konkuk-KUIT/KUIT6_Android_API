@@ -33,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -40,6 +41,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,12 +54,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
+    snackBarState: SnackbarHostState,
     viewModel: PostViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -65,6 +69,8 @@ fun PostCreateScreen(
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val scope = rememberCoroutineScope()
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -269,6 +275,7 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // 작성하기 버튼
             Button(
                 onClick = {
                     val finalAuthor = author.ifBlank { "anonymous" }
@@ -279,6 +286,9 @@ fun PostCreateScreen(
                         imageUrl = viewModel.uploadedImageUrl
                     ) {
                         onPostCreated()
+                        scope.launch{
+                            snackBarState.showSnackbar("게시글이 작성되었습니다.")
+                        }
                     }
                 },
                 modifier = Modifier
@@ -315,7 +325,8 @@ fun PostCreateScreenPreview() {
     MaterialTheme {
         PostCreateScreen(
             onNavigateBack = {},
-            onPostCreated = {}
+            onPostCreated = {},
+            snackBarState = remember { SnackbarHostState() }
         )
     }
 }

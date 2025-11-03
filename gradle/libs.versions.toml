@@ -29,6 +29,7 @@ coil = "2.7.0"
 
 # Coroutines
 coroutines = "1.9.0"
+adapterGuava = "2.10.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -67,6 +68,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 
 # Coroutines
 kotlinx-coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+adapter-guava = { group = "com.squareup.retrofit2", name = "adapter-guava", version.ref = "adapterGuava" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

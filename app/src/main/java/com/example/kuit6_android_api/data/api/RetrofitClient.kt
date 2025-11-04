@@ -22,9 +22,9 @@ object RetrofitClient {
         .build()
 
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(baseUrl = BuildConfig.BASE_URL)
+        .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
-        .addConverterFactory(factory = GsonConverterFactory.create())
+        .addConverterFactory(GsonConverterFactory.create())
         .build()
 
 

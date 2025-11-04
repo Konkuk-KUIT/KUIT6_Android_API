@@ -29,8 +29,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.data.model.Author
-import com.example.kuit6_android_api.data.model.Post
+//import com.example.kuit6_android_api.data.model.Author
+//import com.example.kuit6_android_api.data.model.Post
+import com.example.kuit6_android_api.data.model.response.AuthorResponse
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import com.example.kuit6_android_api.util.formatDateTime
 
@@ -159,7 +160,7 @@ fun PostItemPreview() {
                 title = "샘플 게시글 제목",
                 content = "이것은 샘플 게시글 내용입니다. 미리보기에서는 두 줄까지만 표시됩니다.",
                 imageUrl = null,
-                author = Author(1, "testuser", null),
+                author = AuthorResponse(1, "testuser", null),
                 createdAt = "2025-10-03T12:00:00",
                 updatedAt = "2025-10-03T12:00:00"
             ),

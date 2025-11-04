@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import com.example.kuit6_android_api.data.api.RetrofitClient
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
+import kotlinx.serialization.builtins.serializer
 
 
 class PostViewModel : ViewModel() {
@@ -39,15 +40,15 @@ class PostViewModel : ViewModel() {
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {
-//            runCatching {
-//                apiService.getPostDetail(postId)
-//            }.onSuccess { response ->
-//                response.data?.let{
-//                    if(response.success){
-//                        postDetail = response.data
-//                    }
-//                }
-//            }
+            runCatching {
+                apiService.getPostDetail(postId)
+            }.onSuccess { response ->
+                response.data?.let{
+                    if(response.success){
+                        postDetail = response.data
+                    }
+                }
+            }
         }
     }
 
@@ -59,10 +60,13 @@ class PostViewModel : ViewModel() {
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
+            //예외처리
             runCatching {
+                //서버에 보낼 데이터를 PostCreateRequest에 갑싸서 준비
                 val request = PostCreateRequest(title, content, imageUrl)
                 apiService.createPost(author, request)
-            }.onSuccess { response ->
+
+            }.onSuccess { response ->//성공 처리
                 if (response.success) {
                     clearUploadedImageUrl()
                     onSuccess()
@@ -79,14 +83,33 @@ class PostViewModel : ViewModel() {
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-
+            runCatching {
+                val request = PostCreateRequest(title, content, imageUrl)
+                apiService.editPost(postId, request)
+            }.onSuccess { response ->
+                if(response.success){
+                    postDetail = response.data
+                    onSuccess()
+                }
+            }
         }
     }
 
-    fun deletePost(postId: Long, onSuccess: () -> Unit = {}) {
+    fun deletePost(
+        postId: Long,
+        onSuccess: () -> Unit = {}
+    ) {
         viewModelScope.launch {
+            runCatching {
+                apiService.deletePost(postId)
+            }.onSuccess { response ->
+                if(response.success){
+                    onSuccess()
+                }
+            }
         }
     }
+
 
     fun clearUploadedImageUrl() {
         uploadedImageUrl = null

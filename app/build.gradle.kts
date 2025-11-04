@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,6 +19,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val properties = Properties()
+        val localPropertiesFile =  rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            properties.load(localPropertiesFile.inputStream())
+        }
+        val baseUrl = properties.getProperty("BASE_URL") ?: "http://10.0.2.2:8080"
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
 
     }
 
@@ -38,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -68,6 +79,12 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.retrofit2.retrofit)
+
+    // Gson Converter (필요 시)
+    implementation(libs.converter.gson.v300)
+    // OkHttp Logging Interceptor
+    implementation(libs.logging.interceptor.v521)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -44,7 +44,8 @@ fun NavGraph(
                 },
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
-                }
+                },
+                snackBarState= snackBarState
             )
         }
 
@@ -71,7 +72,7 @@ fun NavGraph(
                 onPostUpdated = {
                     navController.popBackStack()
                 },
-                snackBarState = snackBarState 
+                snackBarState = snackBarState
             )
         }
     }

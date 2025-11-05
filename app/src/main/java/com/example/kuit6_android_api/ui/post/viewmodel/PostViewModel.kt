@@ -1,7 +1,6 @@
 package com.example.kuit6_android_api.ui.post.viewmodel
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -84,9 +83,7 @@ class PostViewModel : ViewModel() {
                 apiService.updatePost(postId, request)
             }.onSuccess { response ->
                 if(response.success && response.data != null){
-                    // 변경된 새 리스트를 posts에 대입
                     posts = posts.map{
-                        // 순회 중인 원소의 id == postId면 갱신된 객체 response.data로 교체
                         if(it.id == postId) response.data else it
                     }
                     postDetail = response.data // postDetail을 갱신된 객체로 바꾸기
@@ -98,16 +95,14 @@ class PostViewModel : ViewModel() {
 
     fun deletePost(postId: Long, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            viewModelScope.launch {
                 runCatching {
                     apiService.deletePost(postId)
                 }.onSuccess { response ->
-                    if(response.success){
+                    if (response.success) {
                         posts = posts.filterNot { it.id == postId }
                         onSuccess()
                     }
                 }
-            }
         }
     }
 

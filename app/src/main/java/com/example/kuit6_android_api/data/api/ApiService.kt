@@ -3,6 +3,7 @@ package com.example.kuit6_android_api.data.api
 import com.example.kuit6_android_api.data.model.response.BaseResponse
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
+import okhttp3.MultipartBody
 import retrofit2.http.*
 
 interface ApiService {
@@ -31,4 +32,10 @@ interface ApiService {
         @Path("id") id: Long,
         @Body request: PostCreateRequest // 수정된 내용 전달
     ): BaseResponse<PostResponse>
+
+    @Multipart
+    @POST("/api/images/upload")
+    suspend fun uploadImage(
+        @Part file: MultipartBody.Part
+    ): BaseResponse<Map<String, String>>
 }

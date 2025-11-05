@@ -25,7 +25,7 @@ android {
         if (localPropertiesFile.exists()) {
             properties.load(localPropertiesFile.inputStream())
         }
-        val baseUrl = properties.getProperty("BASE_URL")
+        val baseUrl = properties.getProperty("BASE_URL") ?: "http://10.0.2.2:8080/"
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
@@ -78,7 +78,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.adapter.guava)
+    //implementation(libs.adapter.guava)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

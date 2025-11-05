@@ -2,6 +2,7 @@ package com.example.kuit6_android_api.ui.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -69,7 +70,8 @@ fun NavGraph(
                 },
                 onPostUpdated = {
                     navController.popBackStack()
-                }
+                },
+                snackBarState = snackBarState 
             )
         }
     }

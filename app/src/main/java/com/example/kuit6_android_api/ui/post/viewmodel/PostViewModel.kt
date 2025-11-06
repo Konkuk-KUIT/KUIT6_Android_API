@@ -24,6 +24,8 @@ class PostViewModel : ViewModel() {
     var uploadedImageUrl by mutableStateOf<String?>(null)
         private set
 
+    /*
+    //얜 이제 사용을 안함
     fun getPosts() {
         viewModelScope.launch {
             runCatching {
@@ -37,6 +39,8 @@ class PostViewModel : ViewModel() {
             }
         }
     }
+    */
+
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {

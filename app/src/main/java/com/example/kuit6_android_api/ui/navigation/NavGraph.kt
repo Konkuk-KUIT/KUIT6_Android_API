@@ -1,6 +1,8 @@
 package com.example.kuit6_android_api.ui.navigation
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -9,24 +11,33 @@ import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
 import com.example.kuit6_android_api.ui.post.screen.PostListScreen
+import com.example.kuit6_android_api.ui.post.viewmodel.PostListViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModelFactory
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: Any = PostListRoute
+    startDestination: Any = PostListRoute,
+    snackBarState: SnackbarHostState
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
         composable<PostListRoute> {
+
+            /*val viewModel = viewModel<PostListViewModel>(
+                factory = PostViewModelFactory.Factory
+            )*/
             PostListScreen(
                 onPostClick = { postId ->
                     navController.navigate(PostDetailRoute(postId))
                 },
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
-                }
+                },
+                viewModel = viewModel(factory= PostViewModelFactory { PostListViewModel(it) })
             )
         }
 
@@ -40,7 +51,8 @@ fun NavGraph(
                 },
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
-                }
+                },
+                snackBarState = snackBarState
             )
         }
 
@@ -51,7 +63,8 @@ fun NavGraph(
                 },
                 onPostCreated = {
                     navController.popBackStack()
-                }
+                },
+                snackBarState = snackBarState
             )
         }
 
@@ -65,7 +78,8 @@ fun NavGraph(
                 },
                 onPostUpdated = {
                     navController.popBackStack()
-                }
+                },
+                snackBarState = snackBarState
             )
         }
     }

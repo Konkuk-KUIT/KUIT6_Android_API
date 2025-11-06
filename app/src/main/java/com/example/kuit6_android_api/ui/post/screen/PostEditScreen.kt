@@ -28,14 +28,17 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,7 +47,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModelFactory
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,14 +59,19 @@ fun PostEditScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
-    viewModel: PostViewModel = viewModel()
+    snackBarState: SnackbarHostState,
+    viewModel: PostEditViewModel = viewModel(factory = PostViewModelFactory { PostEditViewModel(it)  })
 ) {
-    val post = viewModel.postDetail
+    val uiState by viewModel.uiState.collectAsState()
+
+    val post = (postId,)
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isLoaded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -68,7 +80,7 @@ fun PostEditScreen(
     }
 
     LaunchedEffect(postId) {
-        viewModel.getPostDetail(postId)
+        viewModel.loadEditPost(postId)
     }
 
     LaunchedEffect(post) {
@@ -204,6 +216,7 @@ fun PostEditScreen(
                     onClick = {
                         viewModel.updatePost(postId, title, content, null) {
                             onPostUpdated()
+                            scope.launch { snackBarState.showSnackbar("게시글이 수정되었습니다.") }
                         }
                     },
                     modifier = Modifier
@@ -214,7 +227,8 @@ fun PostEditScreen(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                    )
+                    ),
+
                 ) {
                     Text(
                         "수정하기",
@@ -235,7 +249,8 @@ fun PostEditScreenPreview() {
         PostEditScreen(
             postId = 1L,
             onNavigateBack = {},
-            onPostUpdated = {}
+            onPostUpdated = {},
+            snackBarState = SnackbarHostState()
         )
     }
 }

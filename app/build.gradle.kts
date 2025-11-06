@@ -79,6 +79,7 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.adapter.guava)
+    implementation(libs.androidx.startup.runtime)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

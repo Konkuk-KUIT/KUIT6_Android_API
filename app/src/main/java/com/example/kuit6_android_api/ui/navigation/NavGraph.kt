@@ -1,5 +1,6 @@
 package com.example.kuit6_android_api.ui.navigation
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -13,7 +14,8 @@ import com.example.kuit6_android_api.ui.post.screen.PostListScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: Any = PostListRoute
+    startDestination: Any = PostListRoute,
+    snackBarState: SnackbarHostState
 ) {
     NavHost(
         navController = navController,
@@ -40,7 +42,8 @@ fun NavGraph(
                 },
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
-                }
+                },
+                snackBarState = snackBarState
             )
         }
 
@@ -51,7 +54,8 @@ fun NavGraph(
                 },
                 onPostCreated = {
                     navController.popBackStack()
-                }
+                },
+                snackBarState = snackBarState
             )
         }
 
@@ -65,7 +69,8 @@ fun NavGraph(
                 },
                 onPostUpdated = {
                     navController.popBackStack()
-                }
+                },
+                snackBarState = snackBarState
             )
         }
     }

@@ -1,6 +1,7 @@
 package com.example.kuit6_android_api
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -8,9 +9,14 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
@@ -32,6 +38,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -40,15 +47,23 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             KUIT6_Android_APITheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+
+                val snackBarState = remember { SnackbarHostState() }
+
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background),
+                    snackbarHost = {
+                        SnackbarHost(snackBarState)
+                    }
                 ) {
                     val navController = rememberNavController()
 
                     NavGraph(
                         navController = navController,
-                        startDestination = PostListRoute
+                        startDestination = PostListRoute,
+                        snackBarState = snackBarState
                     )
                 }
             }
@@ -71,6 +86,7 @@ class MainActivity : ComponentActivity() {
             ) == PackageManager.PERMISSION_GRANTED -> {
                 // 이미 권한이 있음
             }
+
             shouldShowRequestPermissionRationale(permission) -> {
                 // 권한 거부 이력이 있음 - 설명 표시 후 재요청
                 Toast.makeText(
@@ -80,6 +96,7 @@ class MainActivity : ComponentActivity() {
                 ).show()
                 requestPermissionLauncher.launch(permission)
             }
+
             else -> {
                 // 권한 요청
                 requestPermissionLauncher.launch(permission)

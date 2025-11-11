@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,6 +35,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +48,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 import com.example.kuit6_android_api.util.formatDateTime
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,10 +56,12 @@ fun PostDetailScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onEditClick: (Long) -> Unit = {},
+    snackBarState: SnackbarHostState,
     viewModel: PostViewModel = viewModel()
 ) {
     val post = viewModel.postDetail
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(postId) {
         viewModel.getPostDetail(postId)
@@ -197,6 +202,7 @@ fun PostDetailScreen(
                     viewModel.deletePost(postId) {
                         showDeleteDialog = false
                         onNavigateBack()
+                        scope.launch { snackBarState.showSnackbar("게시글이 삭제되었습니다.") }
                     }
                 }) {
                     Text("삭제")
@@ -219,7 +225,8 @@ fun PostDetailScreenPreview() {
         PostDetailScreen(
             postId = 1L,
             onNavigateBack = {},
-            onEditClick = {}
+            onEditClick = {},
+            snackBarState = remember { SnackbarHostState() }
         )
     }
 }

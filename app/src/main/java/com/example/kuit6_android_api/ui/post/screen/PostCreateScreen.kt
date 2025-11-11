@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,15 +13,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -29,6 +33,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -36,31 +41,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
+    snackBarState: SnackbarHostState,
     viewModel: PostViewModel = viewModel()
 ) {
+    val context = LocalContext.current
     var author by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    val scope = rememberCoroutineScope()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        uri?.let {
+            selectedImageUri = it
+            // 이미지 선택 시 자동으로 업로드
+            viewModel.uploadImage(
+                context = context,
+                uri = it,
+                onSuccess = { imageUrl ->
+                    // 업로드 성공 처리는 ViewModel에서 자동으로 됨(viewModel.uploadedImageUrl)
+                },
+                onError = { error ->
+                    // 에러 처리 (필요시 Toast 등으로 표시)
+                }
+            )
+        }
     }
 
     Scaffold(
@@ -171,12 +198,74 @@ fun PostCreateScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        if (selectedImageUri == null) {
+                        if (selectedImageUri == null && !viewModel.isUploading) {
                             FilledTonalButton(
                                 onClick = { imagePickerLauncher.launch("image/*") },
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Text("선택")
+                            }
+                        }
+                    }
+
+                    // 업로드 중 표시
+                    if (viewModel.isUploading) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(40.dp)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "업로드 중...",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    // 이미지 미리보기
+                    if (selectedImageUri != null && viewModel.uploadedImageUrl != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Box(
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AsyncImage(
+                                model = selectedImageUri,
+                                contentDescription = "선택된 이미지",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            // 삭제 버튼
+                            IconButton(
+                                onClick = {
+                                    selectedImageUri = null
+                                    viewModel.clearUploadedImageUrl()
+                                },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
+                                    .background(
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                                        RoundedCornerShape(20.dp)
+                                    )
+                            ) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "이미지 제거",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
                             }
                         }
                     }
@@ -187,9 +276,17 @@ fun PostCreateScreen(
 
             Button(
                 onClick = {
-                    val finalAuthor = author.ifBlank { "anonymous" }
-                    viewModel.createPost(finalAuthor, title, content, null) {
+                    val finalAuthor = author//.ifBlank { "anonymous" }
+                    viewModel.createPost(
+                        finalAuthor,
+                        title,
+                        content,
+                        imageUrl = viewModel.uploadedImageUrl
+                    ) {
                         onPostCreated()
+                        // ViewModel 에서 멘트를 받아서 전달하는 식으로 많이 구성. flow 활용
+                        // 현재: onSuccess 람다로 넣어주는 식으로 구현
+                        scope.launch { snackBarState.showSnackbar("게시글이 작성되었습니다.") }
                     }
                 },
                 modifier = Modifier
@@ -226,7 +323,8 @@ fun PostCreateScreenPreview() {
     MaterialTheme {
         PostCreateScreen(
             onNavigateBack = {},
-            onPostCreated = {}
+            onPostCreated = {},
+            snackBarState = remember { SnackbarHostState() }
         )
     }
 }

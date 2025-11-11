@@ -1,96 +1,85 @@
 package com.example.kuit6_android_api.ui.post.viewmodel
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.kuit6_android_api.data.model.Author
-import com.example.kuit6_android_api.data.model.Post
-import kotlinx.coroutines.delay
+import com.example.kuit6_android_api.data.api.RetrofitClient
+import com.example.kuit6_android_api.data.model.request.PostCreateRequest
+import com.example.kuit6_android_api.data.model.response.PostResponse
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 class PostViewModel : ViewModel() {
-
-    // 더미 데이터
-    private val dummyPosts = mutableStateListOf(
-        Post(
-            id = 1,
-            title = "Jetpack Compose 시작하기",
-            content = "Jetpack Compose는 Android의 최신 UI 툴킷입니다. 선언형 UI로 더 쉽고 빠르게 UI를 만들 수 있습니다.",
-            imageUrl = null,
-            author = Author(1, "개발자A", null),
-            createdAt = "2025-10-05T10:00:00",
-            updatedAt = "2025-10-05T10:00:00"
-        ),
-        Post(
-            id = 2,
-            title = "Kotlin Coroutines 완벽 가이드",
-            content = "비동기 프로그래밍을 쉽게! Coroutines를 사용하면 복잡한 비동기 코드를 간단하게 작성할 수 있습니다.",
-            imageUrl = null,
-            author = Author(2, "개발자B", null),
-            createdAt = "2025-10-05T11:30:00",
-            updatedAt = "2025-10-05T11:30:00"
-        ),
-        Post(
-            id = 3,
-            title = "Android MVVM 아키텍처",
-            content = "MVVM 패턴으로 코드를 구조화하면 테스트와 유지보수가 쉬워집니다. ViewModel과 LiveData/StateFlow를 활용해봅시다.",
-            imageUrl = null,
-            author = Author(1, "개발자A", null),
-            createdAt = "2025-10-05T14:20:00",
-            updatedAt = "2025-10-05T14:20:00"
-        )
-    )
-
-    private var nextId = 4L
-
-    var posts by mutableStateOf<List<Post>>(emptyList())
+    var posts by mutableStateOf<List<PostResponse>>(emptyList())
         private set
 
-    var postDetail by mutableStateOf<Post?>(null)
+    var postDetail by mutableStateOf<PostResponse?>(null)
         private set
 
     var uploadedImageUrl by mutableStateOf<String?>(null)
         private set
 
+    var isUploading by mutableStateOf(false)
+        private set
+
+    private val apiService = RetrofitClient.apiService
+
     fun getPosts() {
         viewModelScope.launch {
-            delay(500) // 네트워크 시뮬레이션
-            posts = dummyPosts.toList()
+            runCatching {
+                apiService.getPosts()
+            }.onSuccess { response ->
+                response.data?.let {
+                    if (response.success) {
+                        posts = response.data
+                    }
+                }
+            }.onFailure { error ->
+                Log.e("getPost", error.message.toString())
+            }
         }
     }
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {
-            delay(300)
-            postDetail = dummyPosts.find { it.id == postId }
+            runCatching {
+                apiService.getPostDetail(postId)
+            }.onSuccess { response ->
+                if (response.success && response.data != null) {
+                    postDetail = response.data
+                }
+            }.onFailure { error ->
+                // 에러 처리
+                postDetail = null
+            }
         }
     }
 
     fun createPost(
-        author: String = "anonymous",
+        author: String,
         title: String,
         content: String,
         imageUrl: String? = null,
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            delay(500)
-            val newPost = Post(
-                id = nextId++,
-                title = title,
-                content = content,
-                imageUrl = imageUrl,
-                author = Author(nextId, author, null),
-                createdAt = getCurrentDateTime(),
-                updatedAt = getCurrentDateTime()
-            )
-            dummyPosts.add(0, newPost)
-            posts = dummyPosts.toList()
-            onSuccess()
+            runCatching {
+                val request = PostCreateRequest(title, content, imageUrl)
+                apiService.createPost(author, request)
+            }.onSuccess { response ->
+                if (response.success) {
+                    // 이미지 업로드 관련 코드
+                    clearUploadedImageUrl()
+                    onSuccess()
+                }
+            }
         }
     }
 
@@ -102,30 +91,31 @@ class PostViewModel : ViewModel() {
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
-            delay(500)
-            val index = dummyPosts.indexOfFirst { it.id == postId }
-            if (index != -1) {
-                val oldPost = dummyPosts[index]
-                val updatedPost = oldPost.copy(
-                    title = title,
-                    content = content,
-                    imageUrl = imageUrl,
-                    updatedAt = getCurrentDateTime()
-                )
-                dummyPosts[index] = updatedPost
-                postDetail = updatedPost
-                posts = dummyPosts.toList()
-                onSuccess()
+            runCatching {
+                val request = PostCreateRequest(title, content, imageUrl)
+                apiService.updatePost(postId, request)
+            }.onSuccess { response ->
+                if (response.success) {
+                    clearUploadedImageUrl()
+                    onSuccess()
+                }
+            }.onFailure { error ->
+                // 에러 처리
             }
         }
     }
 
     fun deletePost(postId: Long, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            delay(300)
-            dummyPosts.removeIf { it.id == postId }
-            posts = dummyPosts.toList()
-            onSuccess()
+            runCatching {
+                apiService.deletePost(postId)
+            }.onSuccess { response ->
+                if (response.success) {
+                    onSuccess()
+                }
+            }.onFailure { error ->
+
+            }
         }
     }
 
@@ -133,7 +123,38 @@ class PostViewModel : ViewModel() {
         uploadedImageUrl = null
     }
 
-    private fun getCurrentDateTime(): String {
-        return LocalDateTime.now().toString()
+    // 이미지 업로드 함수
+    fun uploadImage(
+        context: Context,
+        uri: Uri,
+        onSuccess: (String) -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            isUploading = true
+            runCatching {
+                val file = UriUtils.uriToFile(context, uri)
+                if (file == null) {
+                    throw Exception("파일 변환 실패")
+                }
+
+                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                apiService.uploadImage(body)
+            }.onSuccess { response ->
+                isUploading = false
+                if (response.success && response.data != null) {
+                    val imageUrl = response.data["imageUrl"]
+                    if (imageUrl != null) {
+                        uploadedImageUrl = imageUrl
+                        onSuccess(imageUrl)
+                    }
+                }
+            }.onFailure { error ->
+                isUploading = false
+                onError(error.message ?: "업로드 실패")
+            }
+        }
     }
 }

@@ -9,8 +9,8 @@
         <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/../../5주차/KUIT6_Android_API" />
-            <option value="$PROJECT_DIR$/../../5주차/KUIT6_Android_API/app" />
+            <option value="$PROJECT_DIR$/../../../건국대학교/KUIT 6th/KUIT6_Android_API" />
+            <option value="$PROJECT_DIR$/../../../건국대학교/KUIT 6th/KUIT6_Android_API/app" />
           </set>
         </option>
       </GradleProjectSettings>

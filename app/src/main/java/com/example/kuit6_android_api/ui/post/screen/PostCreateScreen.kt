@@ -21,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -34,6 +35,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,10 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.state.PostUIState
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -54,13 +56,14 @@ fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
     snackBarHost: SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostCreateViewModel
 ) {
     var author by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsState()
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -193,12 +196,7 @@ fun PostCreateScreen(
             Button(
                 onClick = {
                     val finalAuthor = author
-                    viewModel.createPost(finalAuthor, title, content, viewModel.uploadedImageUrl) {
-                        onPostCreated()
-                        scope.launch {
-                            snackBarHost.showSnackbar("게시글이 작성되었습니다")
-                        }
-                    }
+                    viewModel.createPost(finalAuthor, title, content, viewModel.uploadedImageUrl)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -223,6 +221,23 @@ fun PostCreateScreen(
                 )
             }
 
+            when (uiState){
+                is PostUIState.Loading -> {
+                    CircularProgressIndicator()
+                }
+                is PostUIState.Success -> {
+                    LaunchedEffect(Unit) {
+                        scope.launch {
+                            snackBarHost.showSnackbar("게시글이 작성되었습니다.")
+                        }
+                    }
+                    onPostCreated()
+                }
+                is PostUIState.Error -> {
+                    Text("작성 실패")
+                    onPostCreated()
+                }
+            }
             Spacer(modifier = Modifier.height(16.dp))
         }
     }

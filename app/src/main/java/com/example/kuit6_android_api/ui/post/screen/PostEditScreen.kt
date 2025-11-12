@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -34,6 +35,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,6 +48,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.kuit6_android_api.ui.post.state.PostUIState
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
 
@@ -56,9 +60,8 @@ fun PostEditScreen(
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
     snackbarHost: SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostEditViewModel
 ) {
-    val post = viewModel.postDetail
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
@@ -71,10 +74,15 @@ fun PostEditScreen(
         selectedImageUri = uri
     }
 
-    LaunchedEffect(postId) {
-        viewModel.getPostDetail(postId)
+    val uiState by viewModel.uiState.collectAsState()
+    when (uiState){
+        is PostUIState.Loading -> {
+            CircularProgressIndicator()
+        }
+        is PostUIState.Success -> {
+            val post = (uiState)
+        }
     }
-
     LaunchedEffect(post) {
         if (post != null && !isLoaded) {
             title = post.title

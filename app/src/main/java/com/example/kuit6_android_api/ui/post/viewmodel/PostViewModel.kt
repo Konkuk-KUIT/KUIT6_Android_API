@@ -1,7 +1,6 @@
 package com.example.kuit6_android_api.ui.post.viewmodel
 
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,6 @@ import com.example.kuit6_android_api.data.api.RetrofitClient
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import kotlinx.coroutines.launch
-import java.time.LocalDateTime
 
 class PostViewModel : ViewModel() {
 
@@ -26,19 +24,6 @@ class PostViewModel : ViewModel() {
         private set
 
     private val apiService = RetrofitClient.apiService
-    fun getPosts() {
-        viewModelScope.launch {
-            runCatching {
-                apiService.getPosts()
-            }.onSuccess { response ->
-                response.data?.let {
-                    if (response.success) {
-                        posts = response.data
-                    }
-                }
-            }
-        }
-    }
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {

@@ -54,5 +54,20 @@ object PostViewModelFactory{
 
             PostListViewModel(postRepository)
         }
+        initializer {
+            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
+            val postRepository = application.container.postRepository
+            PostCreateViewModel(postRepository)
+        }
+        initializer {
+            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
+            val postRepository = application.container.postRepository
+            PostDetailViewModel(postRepository)
+        }
+        initializer {
+            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
+            val postRepository = application.container.postRepository
+            PostEditViewModel(postRepository)
+        }
     }
 }

@@ -46,6 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
 
@@ -56,7 +58,9 @@ fun PostEditScreen(
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
     viewModel: PostViewModel = viewModel(),
-    snackBarState: SnackbarHostState
+    snackBarState: SnackbarHostState,
+    editviewModel: PostEditViewModel = viewModel(),
+    detailViewModel: PostDetailViewModel = viewModel()
 ) {
     val post = viewModel.postDetail
 

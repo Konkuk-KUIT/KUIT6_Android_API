@@ -19,7 +19,7 @@ interface ApiService {
     @DELETE("/api/posts/{id}")
     suspend fun deletePost(
         @Path("id") id: Long
-    ): BaseResponse<Unit> // data에 빈 객체 반환
+    ): BaseResponse<PostResponse> // data에 빈 객체 반환
 
     @GET("/api/posts/{id}")
     suspend fun getPostDetail(

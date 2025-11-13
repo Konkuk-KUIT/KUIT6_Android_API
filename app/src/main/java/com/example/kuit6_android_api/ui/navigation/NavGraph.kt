@@ -2,7 +2,6 @@ package com.example.kuit6_android_api.ui.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,8 +11,10 @@ import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
 import com.example.kuit6_android_api.ui.post.screen.PostListScreen
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostListViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModelFactory
 
 @Composable
@@ -27,9 +28,10 @@ fun NavGraph(
         startDestination = startDestination
     ) {
         composable<PostListRoute> {
-            val viewModel = viewModel< PostListViewModel>(
-                factory = PostViewModelFactory.Factory
+            val listViewModel: PostListViewModel = viewModel(
+                factory = PostViewModelFactory { PostListViewModel(it) }
             )
+
             PostListScreen(
                 onPostClick = { postId ->
                     navController.navigate(PostDetailRoute(postId))
@@ -37,13 +39,19 @@ fun NavGraph(
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
                 },
-                viewModel = viewModel
+                viewModel = listViewModel
             )
         }
 
         composable<PostDetailRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<PostDetailRoute>()
+            val detailViewModel: PostDetailViewModel = viewModel(
+                factory = PostViewModelFactory { PostDetailViewModel(it) }
+            )
 
+            val editViewModel: PostEditViewModel = viewModel(
+                factory = PostViewModelFactory { PostEditViewModel(it) }
+            )
             PostDetailScreen(
                 postId = route.postId,
                 onNavigateBack = {
@@ -52,11 +60,17 @@ fun NavGraph(
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
                 },
-                snackBarState = snackBarState
+                snackBarState = snackBarState,
+                detailViewModel=detailViewModel,
+                editViewModel=editViewModel
             )
         }
 
         composable<PostCreateRoute> {
+            val createViewModel: PostCreateViewModel = viewModel(
+                factory = PostViewModelFactory { PostCreateViewModel(it) }
+            )
+
             PostCreateScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -64,12 +78,20 @@ fun NavGraph(
                 onPostCreated = {
                     navController.popBackStack()
                 },
-                snackBarState = snackBarState
+                snackBarState = snackBarState,
+                postCreateViewModel = createViewModel
             )
         }
 
         composable<PostEditRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<PostEditRoute>()
+            val detailViewModel: PostDetailViewModel = viewModel(
+                factory = PostViewModelFactory { PostDetailViewModel(it) }
+            )
+
+            val editViewModel: PostEditViewModel = viewModel(
+                factory = PostViewModelFactory { PostEditViewModel(it) }
+            )
 
             PostEditScreen(
                 postId = route.postId,
@@ -79,7 +101,9 @@ fun NavGraph(
                 onPostUpdated = {
                     navController.popBackStack()
                 },
-                snackBarState = snackBarState
+                snackBarState = snackBarState,
+                editViewModel = editViewModel,
+                detailViewModel = detailViewModel
             )
         }
     }

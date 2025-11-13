@@ -22,19 +22,6 @@ class PostViewModel : ViewModel() {
         private set
 
     private val apiService = RetrofitClient.apiService
-    fun getPosts() {
-        viewModelScope.launch {
-            runCatching {
-                apiService.getPosts()
-            }.onSuccess { response ->
-                response.data?.let {
-                    if (response.success){
-                        posts = response.data
-                    }
-                }
-            }
-        }
-    }
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {

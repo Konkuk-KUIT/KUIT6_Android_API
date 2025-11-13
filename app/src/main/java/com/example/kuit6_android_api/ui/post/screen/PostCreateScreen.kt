@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
 import kotlinx.coroutines.launch
 
@@ -56,7 +57,7 @@ fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
     snackBarState: SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    postCreateViewModel: PostCreateViewModel = viewModel()
 ) {
     val context = LocalContext.current
     var author by remember { mutableStateOf("") }
@@ -196,7 +197,7 @@ fun PostCreateScreen(
             Button(
                 onClick = {
                     val finalAuthor = author
-                    viewModel.createPost(finalAuthor, title, content, null) {
+                    postCreateViewModel.createPost(finalAuthor, title, content, null) {
                         onPostCreated()
                         scope.launch { snackBarState.showSnackbar("게시글이 작성되었습니다.") }
                     }

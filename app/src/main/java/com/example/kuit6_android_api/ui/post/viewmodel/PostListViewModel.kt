@@ -1,11 +1,7 @@
 package com.example.kuit6_android_api.ui.post.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.kuit6_android_api.App
 import com.example.kuit6_android_api.data.repository.PostRepository
 import com.example.kuit6_android_api.ui.post.state.PostListUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,29 +41,3 @@ class PostListViewModel(
 }
 
 
-object PostViewModelFactory{
-    val Factory: ViewModelProvider.Factory = viewModelFactory {
-        initializer {
-            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
-
-            val postRepository = application.container.postRepository
-
-            PostListViewModel(postRepository)
-        }
-        initializer {
-            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
-            val postRepository = application.container.postRepository
-            PostCreateViewModel(postRepository)
-        }
-        initializer {
-            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
-            val postRepository = application.container.postRepository
-            PostDetailViewModel(postRepository)
-        }
-        initializer {
-            val application = this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as App
-            val postRepository = application.container.postRepository
-            PostEditViewModel(postRepository)
-        }
-    }
-}

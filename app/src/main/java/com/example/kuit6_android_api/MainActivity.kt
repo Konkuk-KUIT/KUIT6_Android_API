@@ -40,7 +40,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // 갤러리 권한 요청
         checkAndRequestPermission()
 
         setContent {
@@ -58,7 +57,6 @@ class MainActivity : ComponentActivity() {
                     NavGraph(
                         navController = navController,
                         startDestination = PostListRoute,
-                        snackBarState = snackBarState
                     )
                 }
             }

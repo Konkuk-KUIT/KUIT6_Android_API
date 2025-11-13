@@ -1,46 +1,65 @@
 package com.example.kuit6_android_api.ui.post.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.repository.PostRepository
-import com.example.kuit6_android_api.ui.post.state.PostUIState
+import com.example.kuit6_android_api.ui.post.state.ImageUiState
+import com.example.kuit6_android_api.ui.post.state.PostCreateUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.MultipartBody
 
-class PostCreateViewModel(
-    private val postRepository: PostRepository
-): ViewModel(){
-    private val _uiState = MutableStateFlow<PostUIState>(PostUIState.Loading)
-    val uiState: StateFlow<PostUIState> = _uiState.asStateFlow()
+class PostCreateViewModel (
+    private val postRepository : PostRepository
+) : ViewModel(){
+    private val _uiState = MutableStateFlow<PostCreateUiState>(PostCreateUiState.Loading) // 변경 가능 상태
+    val uiState: StateFlow<PostCreateUiState> = _uiState.asStateFlow()
 
-    var uploadedImageUrl by mutableStateOf<String?>(null)
-        private set
+    private val _uploadImageUiState = MutableStateFlow<ImageUiState>(ImageUiState.Idle)
+    val uploadImageUiState: StateFlow<ImageUiState> = _uploadImageUiState.asStateFlow()
 
-    fun createPost(author: String = "anonymous", title: String, content: String, imageUrl: String? = null){
+    fun createPost(
+        author: String,
+        request: PostCreateRequest
+    ){
         viewModelScope.launch {
-            _uiState.value = PostUIState.Loading
-            val request = PostCreateRequest(title, content, imageUrl)
+            _uiState.value = PostCreateUiState.Loading
+
             postRepository.createPost(author, request)
                 .onSuccess { post ->
-                    _uiState.value = PostUIState.Success(post)
+                    _uiState.value = PostCreateUiState.Success(post)
                 }
                 .onFailure { error ->
-                    _uiState.value = PostUIState.Error(
-                        message = error.message ?: "error"
+                    _uiState.value = PostCreateUiState.Error(
+                        error.message ?: "error"
                     )
                 }
-
-            clearUploadedImageUrl()
         }
     }
 
-    fun clearUploadedImageUrl(){
-        uploadedImageUrl = null
+    fun uploadImage(
+        file: MultipartBody.Part
+    ){
+        viewModelScope.launch {
+            _uploadImageUiState.value = ImageUiState.Loading
+
+            // 레포지토리의 uploadImage() 함수 호출 -> 성공 시 Success(data)로 uiState에 반환
+            postRepository.uploadImage(file)
+                .onSuccess { data ->
+                    _uploadImageUiState.value = ImageUiState.Success(data)
+                }
+                .onFailure { error ->
+                    _uploadImageUiState.value =
+                        ImageUiState.Error(error.message ?: "이미지 업로드 실패")
+                }
+        }
+    }
+
+    // 이미지 Url 비워줄 때 호출하는 함수 -> uiState를 Idle로 단순 변경
+    fun clearUploadedImageUrl() {
+        _uploadImageUiState.value = ImageUiState.Idle
     }
 }

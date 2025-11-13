@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.kuit6_android_api.data.api.ApiService
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.PostResponse
+import okhttp3.MultipartBody
 
 class PostRepositoryImpl(
     private val apiService: ApiService
@@ -77,6 +78,19 @@ class PostRepositoryImpl(
                 throw Exception(response.message ?: "생성 실패")
             }
         }.onFailure { error ->
+            Log.e("PostRepository", error.message.toString())
+        }
+    }
+
+    override suspend fun uploadImage(file: MultipartBody.Part): Result<Map<String, String>> {
+        return runCatching {
+            val response = apiService.uploadImage(file)
+            if(response.success && response.data != null){
+                response.data
+            }else{
+                throw Exception(response.message ?: "이미지 업로드 실패")
+            }
+        }.onFailure { error->
             Log.e("PostRepository", error.message.toString())
         }
     }

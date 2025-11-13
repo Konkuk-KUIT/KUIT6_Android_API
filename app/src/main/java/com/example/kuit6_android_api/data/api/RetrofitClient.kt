@@ -20,7 +20,7 @@ object RetrofitClient {
         .build()
 
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BuildConfig.BASE_URL)
+        .baseUrl("http://3.34.136.227:8080")
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

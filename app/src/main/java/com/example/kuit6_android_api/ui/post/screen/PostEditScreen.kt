@@ -1,17 +1,22 @@
 package com.example.kuit6_android_api.ui.post.screen
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -27,9 +32,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -38,17 +41,23 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.ui.post.state.PostUIState
-import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.data.model.request.PostCreateRequest
+import com.example.kuit6_android_api.ui.post.state.PostEditUiState
+import com.example.kuit6_android_api.ui.post.state.ImageUiState
 import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
+import com.example.kuit6_android_api.ui.post.util.UriUtil
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,203 +65,228 @@ fun PostEditScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
-    snackbarHost: SnackbarHostState,
-    editviewModel: PostEditViewModel,
-    detailViewModel: PostDetailViewModel
+    viewModel: PostEditViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val imgUiState by viewModel.uploadImageUiState.collectAsState()
+
+    val context = LocalContext.current
 
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null)}
+    var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
     var isLoaded by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        selectedImageUri = uri
+        uri?.let {
+            selectedImageUri = it
+            val file = UriUtil.uriToFile(context, it)
+            if (file != null) {
+                val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
+                val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
+
+                viewModel.uploadImage(body)
+            }
+        }
     }
 
-    val editUiState by editviewModel.uiState.collectAsState()
-    val detailUiState by detailViewModel.uiState.collectAsState()
-    when (detailUiState){
-        is PostUIState.Loading -> {
-            CircularProgressIndicator()
+    LaunchedEffect(postId) {
+        viewModel.getPostDetail(postId)
+    }
+
+    LaunchedEffect(imgUiState) {
+        when (imgUiState) {
+            is ImageUiState.Success -> {
+                uploadedImageUrl = (imgUiState as ImageUiState.Success).imgUrl["imageUrl"]
+            }
+            is ImageUiState.Error -> {
+                Toast.makeText(
+                    context,
+                    (imgUiState as ImageUiState.Error).message,
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            else -> Unit
         }
-        is PostUIState.Success -> {
-            val post = (detailUiState as PostUIState.Success).post
-            LaunchedEffect(post) {
-                if (post != null && !isLoaded) {
-                    title = post.title
-                    content = post.content
-                    isLoaded = true
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        "게시글 수정",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        when (uiState) {
+            is PostEditUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
             }
 
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = {
-                            Text(
-                                "게시글 수정",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold
-                                )
-                            )
-                        },
-                        navigationIcon = {
-                            IconButton(onClick = onNavigateBack) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "뒤로가기")
-                            }
-                        }
-                    )
+            is PostEditUiState.Success -> {
+                val post = (uiState as PostEditUiState.Success).post
+
+                if (!isLoaded) {
+                    title = post.title
+                    content = post.content
+                    uploadedImageUrl = post.imageUrl
+                    isLoaded = true
                 }
-            ) { paddingValues ->
-                post?.let {
-                    Column(
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .verticalScroll(rememberScrollState())
+                        .padding(paddingValues)
+                        .padding(20.dp)
+                ) {
+                    // 제목 입력
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("제목") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 내용 입력
+                    OutlinedTextField(
+                        value = content,
+                        onValueChange = { content = it },
+                        label = { Text("내용") },
                         modifier = Modifier
-                            .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.background)
-                            .verticalScroll(rememberScrollState())
-                            .padding(paddingValues)
-                            .padding(20.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = title,
-                            onValueChange = { title = it },
-                            label = { Text("제목") },
-                            placeholder = { Text("제목을 입력하세요 (최대 200자)") },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                            )
-                        )
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        maxLines = 10
+                    )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
 
-                        OutlinedTextField(
-                            value = content,
-                            onValueChange = { content = it },
-                            label = { Text("내용") },
-                            placeholder = { Text("내용을 입력하세요") },
+                    Text(
+                        text = "이미지 첨부",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (selectedImageUri != null || uploadedImageUrl != null) {
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(200.dp),
-                            maxLines = 10,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                            )
-                        )
-
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Text(
-                            text = "이미지 첨부",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        if (selectedImageUri != null || post.imageUrl != null) {
-                            Box(
+                                .height(200.dp)
+                        ) {
+                            AsyncImage(
+                                model = selectedImageUri ?: uploadedImageUrl,
+                                contentDescription = "선택된 이미지",
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(200.dp)
-                            ) {
-                                AsyncImage(
-                                    model = selectedImageUri ?: post.imageUrl,
-                                    contentDescription = "선택된 이미지",
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(200.dp)
-                                        .border(
-                                            width = 1.dp,
-                                            color = MaterialTheme.colorScheme.outline,
-                                            shape = RoundedCornerShape(8.dp)
-                                        ),
-                                    contentScale = ContentScale.Crop
-                                )
-                                IconButton(
-                                    onClick = { selectedImageUri = null },
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(8.dp)
-                                ) {
-                                    Icon(
-                                        Icons.Default.Clear,
-                                        contentDescription = "이미지 제거",
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = { imagePickerLauncher.launch("image/*") },
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .border(1.dp, MaterialTheme.colorScheme.outline),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    selectedImageUri = null
+                                    uploadedImageUrl = null
+                                    viewModel.clearUploadedImageUrl()
+                                },
                                 modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(56.dp),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.primary
-                                )
+                                    .align(Alignment.TopEnd)
+                                    .padding(8.dp)
                             ) {
-                                Text("갤러리에서 이미지 선택")
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "이미지 제거",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Button(
-                            onClick = {
-                                editviewModel.updatePost(postId, title, content, null)
-                            },
+                    } else {
+                        OutlinedButton(
+                            onClick = { imagePickerLauncher.launch("image/*") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
-                            enabled = title.isNotBlank() && content.isNotBlank(),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text(
-                                "수정하기",
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                )
-                            )
+                            Text("갤러리에서 이미지 선택")
                         }
+                    }
 
-                        when (editUiState){
-                            is PostUIState.Loading -> {
-                                CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // 수정 버튼
+                    Button(
+                        onClick = {
+                            val finalImageUrl = uploadedImageUrl
+                            val request = PostCreateRequest(
+                                title = title,
+                                content = content,
+                                imageUrl = finalImageUrl
+                            )
+                            viewModel.editPost(postId, request)
+                            onPostUpdated()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                        enabled = title.isNotBlank() && content.isNotBlank() && imgUiState !is ImageUiState.Loading,
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
+                    ) {
+                        if (imgUiState is ImageUiState.Loading) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("업로드 중...")
                             }
-                            is PostUIState.Success -> {
-                                LaunchedEffect(Unit) {
-                                    snackbarHost.showSnackbar("수정 완료")
-                                    onPostUpdated()
-                                }
-                            }
-                            is PostUIState.Error -> {
-                                onNavigateBack()
-                            }
+                        } else {
+                            Text("수정하기", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
-        }
-        is PostUIState.Error -> {
-            Text("로딩 에러")
-            onNavigateBack()
+
+            is PostEditUiState.Error -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("게시글 로딩 실패")
+                }
+            }
         }
     }
-
 }

@@ -43,6 +43,15 @@ class PostViewModel : ViewModel() {
 
     fun getPostDetail(postId: Long) {
         viewModelScope.launch {
+            runCatching {
+                apiService.getPostDetail(postId)
+            }.onSuccess { response ->
+                if (response.success && response.data != null) {
+                    postDetail = response.data
+                }
+            }.onFailure { error ->
+                postDetail = null
+            }
         }
     }
 
@@ -75,12 +84,28 @@ class PostViewModel : ViewModel() {
         onSuccess: () -> Unit = {}
     ) {
         viewModelScope.launch {
+            runCatching {
+                val request = PostCreateRequest(title, content, imageUrl)
+                apiService.editPost(postId, request)
+            }.onSuccess { response ->
+                if (response.success) {
+                    onSuccess()
+                }
+            }.onFailure { error -> }
         }
     }
 
     fun deletePost(postId: Long, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
-            onSuccess()
+            runCatching {
+                apiService.deletePost(postId)
+            }.onSuccess { response ->
+                if (response.success) {
+                    onSuccess()
+                }
+            }.onFailure { error ->
+
+            }
         }
     }
 

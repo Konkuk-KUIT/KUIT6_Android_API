@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,11 +50,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.state.PostCreateUiState
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,8 +62,13 @@ fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
     snackBarState: SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostCreateViewModel
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+    val uploadedImageUrl by viewModel.uploadedImageUrl.collectAsState()
+    val isUploading = uiState is PostCreateUiState.IsUploading
+    val loading = uiState is PostCreateUiState.Loading
+
     val context = LocalContext.current
     var author by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
@@ -80,9 +85,6 @@ fun PostCreateScreen(
             viewModel.uploadImage(
                 context = context,
                 uri = it,
-                onSuccess = { imageUrl ->
-                    // 업로드 성공 처리는 ViewModel에서 자동으로 됨(viewModel.uploadedImageUrl)
-                },
                 onError = { error ->
                     // 에러 처리 (필요시 Toast 등으로 표시)
                 }
@@ -198,7 +200,7 @@ fun PostCreateScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        if (selectedImageUri == null && !viewModel.isUploading) {
+                        if (selectedImageUri == null && !isUploading) {
                             FilledTonalButton(
                                 onClick = { imagePickerLauncher.launch("image/*") },
                                 shape = RoundedCornerShape(10.dp)
@@ -209,7 +211,7 @@ fun PostCreateScreen(
                     }
 
                     // 업로드 중 표시
-                    if (viewModel.isUploading) {
+                    if (isUploading) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Box(
                             modifier = Modifier.fillMaxWidth(),
@@ -232,7 +234,7 @@ fun PostCreateScreen(
                     }
 
                     // 이미지 미리보기
-                    if (selectedImageUri != null && viewModel.uploadedImageUrl != null) {
+                    if (selectedImageUri != null && uploadedImageUrl != null) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Box(
                             modifier = Modifier.fillMaxWidth()
@@ -281,13 +283,11 @@ fun PostCreateScreen(
                         finalAuthor,
                         title,
                         content,
-                        imageUrl = viewModel.uploadedImageUrl
-                    ) {
-                        onPostCreated()
-                        // ViewModel 에서 멘트를 받아서 전달하는 식으로 많이 구성. flow 활용
-                        // 현재: onSuccess 람다로 넣어주는 식으로 구현
-                        scope.launch { snackBarState.showSnackbar("게시글이 작성되었습니다.") }
-                    }
+                        imageUrl = uploadedImageUrl,
+                        onSuccess = {onPostCreated()
+                            scope.launch { snackBarState.showSnackbar("게시글이 작성되었습니다.") }
+                        }
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -317,14 +317,14 @@ fun PostCreateScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PostCreateScreenPreview() {
-    MaterialTheme {
-        PostCreateScreen(
-            onNavigateBack = {},
-            onPostCreated = {},
-            snackBarState = remember { SnackbarHostState() }
-        )
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun PostCreateScreenPreview() {
+//    MaterialTheme {
+//        PostCreateScreen(
+//            onNavigateBack = {},
+//            onPostCreated = {},
+//            snackBarState = remember { SnackbarHostState() }
+//        )
+//    }
+//}

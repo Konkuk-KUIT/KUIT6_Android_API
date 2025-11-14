@@ -1,6 +1,7 @@
 package com.example.kuit6_android_api.data.api
 
 import com.example.kuit6_android_api.BuildConfig
+import com.example.kuit6_android_api.data.service.ApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

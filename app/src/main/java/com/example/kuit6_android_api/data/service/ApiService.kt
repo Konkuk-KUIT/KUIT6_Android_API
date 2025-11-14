@@ -1,5 +1,4 @@
-package com.example.kuit6_android_api.data.api
-
+package com.example.kuit6_android_api.data.service
 
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.BaseResponse

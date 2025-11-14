@@ -46,7 +46,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.postViewModelFactory
 import com.example.kuit6_android_api.util.formatDateTime
 import kotlinx.coroutines.launch
 
@@ -56,15 +57,17 @@ fun PostDetailScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onEditClick: (Long) -> Unit = {},
-    viewModel: PostViewModel = viewModel(),
+    // Repository는 postViewModelFactory를 통해 수동 주입(App Container)됩니다
+    viewModel: PostDetailViewModel = viewModel(factory = postViewModelFactory { PostDetailViewModel(it) }),
     snackBarState: SnackbarHostState
 ) {
-    val post = viewModel.postDetail
+    val uiState = viewModel.uiState
+    val post = uiState.postDetail
     var showDeleteDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(postId) {
-//        viewModel.getPostDetail(postId)
+        viewModel.getPostDetail(postId)
     }
 
     Scaffold(

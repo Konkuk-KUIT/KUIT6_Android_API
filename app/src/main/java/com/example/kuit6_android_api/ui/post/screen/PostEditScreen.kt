@@ -52,7 +52,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.postViewModelFactory
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,11 +62,13 @@ fun PostEditScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
-    viewModel: PostViewModel = viewModel(),
+    // Repository는 postViewModelFactory를 통해 수동 주입(App Container)됩니다
+    viewModel: PostEditViewModel = viewModel(factory = postViewModelFactory { PostEditViewModel(it) }),
     snackBarState: SnackbarHostState
 ) {
     val context = LocalContext.current
-    val post = viewModel.postDetail
+    val uiState = viewModel.uiState
+    val post = uiState.postDetail
     val scope = rememberCoroutineScope()
 
     var title by remember { mutableStateOf("") }
@@ -231,7 +234,7 @@ fun PostEditScreen(
                 Button(
                     onClick = {
                         val imageUrl = if (selectedImageUri != null) {
-                            viewModel.uploadedImageUrl
+                            uiState.uploadedImageUrl
                         } else {
                             post?.imageUrl
                         }
@@ -245,14 +248,14 @@ fun PostEditScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = title.isNotBlank() && content.isNotBlank() && !viewModel.isUploading,
+                    enabled = title.isNotBlank() && content.isNotBlank() && !uiState.isUploading,
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 ) {
-                    if (viewModel.isUploading) {
+                    if (uiState.isUploading) {
                         Row(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically

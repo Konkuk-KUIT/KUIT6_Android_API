@@ -1,0 +1,36 @@
+package com.example.kuit6_android_api.ui.post.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.kuit6_android_api.data.repository.PostRepository
+import com.example.kuit6_android_api.ui.post.state.PostListUiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+
+class PostListViewModel(
+    private val repository: PostRepository
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
+    val uiState: StateFlow<PostListUiState> = _uiState.asStateFlow()
+
+    private fun loadPosts() {
+        viewModelScope.launch {
+            _uiState.value = PostListUiState.Loading
+            repository.getPosts()
+                .onSuccess { posts ->
+                    _uiState.value = PostListUiState.Success(posts)
+                }
+                .onFailure { error ->
+                    _uiState.value = PostListUiState.Error(
+                        message = error.message ?: "error"
+                    )
+                }
+        }
+    }
+
+    fun refresh() {
+        loadPosts()
+    }
+}

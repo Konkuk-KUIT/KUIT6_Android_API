@@ -78,6 +78,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.datastore.preferences)
     //implementation(libs.adapter.guava)
 
     testImplementation(libs.junit)

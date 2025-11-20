@@ -1,8 +1,10 @@
 package com.example.kuit6_android_api.data.api
 
 import android.R.attr.value
+import com.example.kuit6_android_api.data.model.request.LoginRequest
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.BaseResponse
+import com.example.kuit6_android_api.data.model.response.LoginResponse
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Body
@@ -46,4 +48,15 @@ interface ApiService {
     suspend fun uploadImage(
         @Part file: MultipartBody.Part
     ): BaseResponse<Map<String, String>>
+
+    @POST("/api/auth/signup")
+    suspend fun signup(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
+    @POST("/api/auth/login")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
 }

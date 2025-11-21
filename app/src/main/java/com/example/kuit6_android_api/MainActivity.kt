@@ -63,8 +63,7 @@ class MainActivity : ComponentActivity() {
 
                     NavGraph(
                         navController = navController,
-                        startDestination = PostListRoute,
-                        snackBarState =snackBarState
+                        startDestination = PostListRoute
                     )
                 }
             }

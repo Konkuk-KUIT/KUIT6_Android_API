@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -82,12 +84,22 @@ fun LoginScreen(
                     Text("회원가입")
                 }
             }
-                Text("토큰:${uiState.token} ")
-                Button(onClick = {
-                    viewModel.getToken(context= context)
-                }){
-                    Text("토큰 조회")
-                }
+            Text("토큰:${uiState.token} ")
+            Button(onClick = {
+                viewModel.getToken(context= context)
+            }){
+                Text("토큰 조회")
+            }
+            var buttonText = remember { mutableStateOf("토큰 검증") }
+            //토큰 검증
+            //토큰 검증 성공 (성공 시)
+            //토큰 검증 실패 (실패 시)
+            Button(onClick= {
+                //토큰 검증 api연동
+            }){
+
+                Text("토큰 검증")
+            }
             }
         }
 }

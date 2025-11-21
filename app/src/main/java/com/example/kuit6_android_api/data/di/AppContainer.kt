@@ -1,5 +1,6 @@
 package com.example.kuit6_android_api.data.di
 
+import android.content.Context
 import com.example.kuit6_android_api.data.api.ApiService
 import com.example.kuit6_android_api.data.api.RetrofitClient
 import com.example.kuit6_android_api.data.repository.LoginRepository
@@ -9,9 +10,18 @@ import com.example.kuit6_android_api.data.repository.PostRepositoryImpl
 import com.example.kuit6_android_api.data.repository.TokenRepository
 import com.example.kuit6_android_api.data.repository.TokenRepositoryImpl
 
-class AppContainer {
+class AppContainer(private val context: Context) {
+    
+    val tokenRepository: TokenRepository by lazy{
+        TokenRepositoryImpl()
+    }
+    
+    private val retrofitClient: RetrofitClient by lazy {
+        RetrofitClient(context, tokenRepository)
+    }
+    
     private val apiService: ApiService by lazy {
-        RetrofitClient.apiService
+        retrofitClient.apiService
     }
 
     val postRepository: PostRepository by lazy{
@@ -20,9 +30,5 @@ class AppContainer {
 
     val loginRepository: LoginRepository by lazy{
         LoginRepositoryImpl(apiService)
-    }
-
-    val tokenRepository: TokenRepository by lazy{
-        TokenRepositoryImpl()
     }
 }

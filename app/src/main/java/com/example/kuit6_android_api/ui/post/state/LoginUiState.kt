@@ -6,4 +6,11 @@ data class LoginUiState(
     val password: String= "",
     val isAutoLogin: Boolean= false,
     val token: String = "",
+    val isTokenValidating: Boolean = false,
+    val tokenValidationResult: TokenValidationResult? = null
 )
+
+sealed class TokenValidationResult {
+    object Success : TokenValidationResult()
+    data class Error(val message: String) : TokenValidationResult()
+}

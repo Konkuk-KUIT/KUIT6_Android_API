@@ -12,6 +12,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.kuit6_android_api.ui.post.state.TokenValidationResult
 import com.example.kuit6_android_api.ui.post.viewmodel.LoginViewModel
 
 @Composable
@@ -32,6 +34,11 @@ fun LoginScreen(
     ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // 화면 진입 시 자동 로그인 설정 불러오기
+    LaunchedEffect(Unit) {
+        viewModel.loadAutoLoginSetting(context)
+    }
 
     Scaffold(Modifier.fillMaxSize()){ innerPadding->
         Column(
@@ -66,7 +73,7 @@ fun LoginScreen(
                 Checkbox(
                     checked = uiState.isAutoLogin,
                     onCheckedChange = {
-                        viewModel.onAutoLoginChanged(it)
+                        viewModel.onAutoLoginChanged(it, context)
                     }
                 )
                 Text("자동 로그인")
@@ -90,16 +97,23 @@ fun LoginScreen(
             }){
                 Text("토큰 조회")
             }
-            var buttonText = remember { mutableStateOf("토큰 검증") }
-            //토큰 검증
-            //토큰 검증 성공 (성공 시)
-            //토큰 검증 실패 (실패 시)
-            Button(onClick= {
-                //토큰 검증 api연동
-            }){
-
-                Text("토큰 검증")
+            // 토큰 검증 버튼
+            Button(
+                onClick = {
+                    viewModel.validateToken(context)
+                },
+                enabled = !uiState.isTokenValidating
+            ) {
+                val buttonText = when {
+                    uiState.isTokenValidating -> "검증 중..."
+                    uiState.tokenValidationResult is TokenValidationResult.Success -> "토큰 검증 성공"
+                    uiState.tokenValidationResult is TokenValidationResult.Error -> "토큰 검증 실패"
+                    else -> "토큰 검증"
+                }
+                Text(buttonText)
             }
+            
+           
             }
         }
 }

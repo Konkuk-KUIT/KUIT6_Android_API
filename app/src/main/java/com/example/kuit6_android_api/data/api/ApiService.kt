@@ -1,7 +1,9 @@
 package com.example.kuit6_android_api.data.api
 
+import com.example.kuit6_android_api.data.model.request.LoginRequest
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.BaseResponse
+import com.example.kuit6_android_api.data.model.response.LoginResponse
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Body
@@ -51,4 +53,19 @@ interface ApiService {
     suspend fun uploadImage(
         @Part file: MultipartBody.Part
     ): BaseResponse<Map<String, String>>
+
+    @POST("/api/auth/signup")
+    suspend fun signup(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
+    @POST("/api/auth/login")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
+    // 토큰 인증 관련 엔드포인트 호출 함수(API 함수) 추가
+    @GET("/api/auth/validate")
+    suspend fun validateToken(): BaseResponse<Boolean>
+    // 서버로 요청이 나가기 전에 실행되는 authInterceptor가 헤더에 토큰을 포함하기 때문에 토큰을 전달하는 바디 불필요
 }

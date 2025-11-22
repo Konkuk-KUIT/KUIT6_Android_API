@@ -2,14 +2,23 @@ package com.example.kuit6_android_api.ui.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.kuit6_android_api.ui.post.screen.LoginScreen
 import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
 import com.example.kuit6_android_api.ui.post.screen.PostListScreen
+import com.example.kuit6_android_api.ui.post.viewmodel.LoginViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostListViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.loginViewModelFactory
+import com.example.kuit6_android_api.ui.post.viewmodel.postViewModelFactory
 
 @Composable
 fun NavGraph(
@@ -28,7 +37,11 @@ fun NavGraph(
                 },
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
-                }
+                },
+                onLoginClick = {
+                    navController.navigate(LoginRoute)
+                },
+                viewModel = viewModel(factory = postViewModelFactory { PostListViewModel(it) })
             )
         }
 
@@ -43,6 +56,7 @@ fun NavGraph(
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
                 },
+                viewModel = viewModel(factory = postViewModelFactory { PostDetailViewModel(it) }),
                 snackBarState = snackBarState
             )
         }
@@ -55,6 +69,7 @@ fun NavGraph(
                 onPostCreated = {
                     navController.popBackStack()
                 },
+                viewModel = viewModel(factory = postViewModelFactory { PostCreateViewModel(it) }),
                 snackBarState = snackBarState
             )
         }
@@ -70,7 +85,25 @@ fun NavGraph(
                 onPostUpdated = {
                     navController.popBackStack()
                 },
+                viewModel = viewModel(factory = postViewModelFactory { PostEditViewModel(it) }),
                 snackBarState = snackBarState
+            )
+        }
+        composable<LoginRoute> { backStackEntry ->
+            val route = backStackEntry.toRoute<LoginRoute>()
+
+            LoginScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                viewModel = viewModel(factory = loginViewModelFactory { loginRepo, tokenRepo, app ->
+                    LoginViewModel(
+                        loginRepository = loginRepo,
+                        tokenRepository = tokenRepo,
+                        application = app
+                        //앱 파라미터 전달
+                    )
+                })
             )
         }
     }

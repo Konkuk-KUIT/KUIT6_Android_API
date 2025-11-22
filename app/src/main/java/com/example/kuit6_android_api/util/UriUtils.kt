@@ -1,4 +1,4 @@
-package com.example.kuit6_android_api.ui.post.viewmodel
+package com.example.kuit6_android_api.util
 
 import android.content.Context
 import android.net.Uri

@@ -49,12 +49,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.ui.post.state.PostEditUiState
-import com.example.kuit6_android_api.ui.post.state.ImageUiState
+import com.example.kuit6_android_api.ui.post.state.UploadImageUiState
 import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
-import com.example.kuit6_android_api.ui.post.util.UriUtil
+import com.example.kuit6_android_api.ui.post.viewmodel.UriUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -65,8 +66,9 @@ fun PostEditScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onPostUpdated: () -> Unit,
-    viewModel: PostEditViewModel
+    viewModel: PostEditViewModel = hiltViewModel<PostEditViewModel>()
 ) {
+    // PostEditUiState, UploadImageUiState 상태 구독
     val uiState by viewModel.uiState.collectAsState()
     val imgUiState by viewModel.uploadImageUiState.collectAsState()
 
@@ -78,34 +80,38 @@ fun PostEditScreen(
     var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
     var isLoaded by remember { mutableStateOf(false) }
 
+    // 이미지 업로드
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
-            val file = UriUtil.uriToFile(context, it)
+            // Uri → Multipart 변환
+            val file = UriUtils.uriToFile(context, it)
             if (file != null) {
                 val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
-
+                // file을 인자로해서 viewModel의 uploadImage 호출
                 viewModel.uploadImage(body)
             }
         }
     }
 
+    // 이미 존재하는 게시글 내용 불러오기: PostEditViewModel의 getPostDetail() 호출
     LaunchedEffect(postId) {
         viewModel.getPostDetail(postId)
     }
 
+    // imagUiState가 변할 때마다 성공 시 uploadedImageUrl 변경, 실패 시 토스트
     LaunchedEffect(imgUiState) {
         when (imgUiState) {
-            is ImageUiState.Success -> {
-                uploadedImageUrl = (imgUiState as ImageUiState.Success).imgUrl["imageUrl"]
+            is UploadImageUiState.Success -> {
+                uploadedImageUrl = (imgUiState as UploadImageUiState.Success).imgUrl["imageUrl"]
             }
-            is ImageUiState.Error -> {
+            is UploadImageUiState.Error -> {
                 Toast.makeText(
                     context,
-                    (imgUiState as ImageUiState.Error).message,
+                    (imgUiState as UploadImageUiState.Error).message,
                     Toast.LENGTH_SHORT
                 ).show()
             }
@@ -191,6 +197,7 @@ fun PostEditScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // 이미지 표시 영역
                     if (selectedImageUri != null || uploadedImageUrl != null) {
                         Box(
                             modifier = Modifier
@@ -248,19 +255,20 @@ fun PostEditScreen(
                                 content = content,
                                 imageUrl = finalImageUrl
                             )
+                            // 수정 버튼 누를 시 PostEditViewModel의 editPost() 호출
                             viewModel.editPost(postId, request)
                             onPostUpdated()
                         },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
-                        enabled = title.isNotBlank() && content.isNotBlank() && imgUiState !is ImageUiState.Loading,
+                        enabled = title.isNotBlank() && content.isNotBlank() && imgUiState !is UploadImageUiState.Loading,
                         shape = RoundedCornerShape(12.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        if (imgUiState is ImageUiState.Loading) {
+                        if (imgUiState is UploadImageUiState.Loading) {
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center

@@ -51,11 +51,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
-import com.example.kuit6_android_api.ui.post.state.ImageUiState
+import com.example.kuit6_android_api.ui.post.state.UploadImageUiState
 import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
-import com.example.kuit6_android_api.ui.post.util.UriUtil
+import com.example.kuit6_android_api.ui.post.viewmodel.UriUtils
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -65,8 +66,9 @@ import okhttp3.RequestBody.Companion.asRequestBody
 fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
-    viewModel: PostCreateViewModel
+    viewModel: PostCreateViewModel = hiltViewModel<PostCreateViewModel>()
 ) {
+    // create, upload image uiState 상태 구독
     val uiState by viewModel.uiState.collectAsState()
     val imgUiState by viewModel.uploadImageUiState.collectAsState()
     val context = LocalContext.current
@@ -77,13 +79,15 @@ fun PostCreateScreen(
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
 
+    // 이미지 업로드
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
             selectedImageUri = it
 
-            val file = UriUtil.uriToFile(context, it)
+            // Uri → MultipartBody.Part 변환
+            val file = UriUtils.uriToFile(context, it)
             if (file != null) {
                 val requestFile = file.asRequestBody("image/*".toMediaTypeOrNull())
                 val body = MultipartBody.Part.createFormData("file", file.name, requestFile)
@@ -93,16 +97,17 @@ fun PostCreateScreen(
         }
     }
 
+    // imagUiState가 변할 때마다 성공 시 uploadedImageUrl 변경, 실패 시 토스트
     LaunchedEffect(imgUiState) {
         when (imgUiState) {
-            is ImageUiState.Success -> {
-                uploadedImageUrl = (imgUiState as ImageUiState.Success).imgUrl["imageUrl"]
+            is UploadImageUiState.Success -> {
+                uploadedImageUrl = (imgUiState as UploadImageUiState.Success).imgUrl["imageUrl"]
             }
-            is ImageUiState.Error -> {
+            is UploadImageUiState.Error -> {
                 Toast
                     .makeText(
                         context,
-                        (imgUiState as ImageUiState.Error).message,
+                        (imgUiState as UploadImageUiState.Error).message,
                         Toast.LENGTH_SHORT
                     )
                     .show()
@@ -142,6 +147,7 @@ fun PostCreateScreen(
                 .padding(paddingValues)
                 .padding(20.dp)
         ) {
+            // 작성자 입력
             OutlinedTextField(
                 value = author,
                 onValueChange = { author = it },
@@ -158,6 +164,7 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // 제목 입력
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -174,6 +181,7 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // 내용 입력
             OutlinedTextField(
                 value = content,
                 onValueChange = { content = it },
@@ -192,6 +200,7 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // 이미지 섹션
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -215,7 +224,7 @@ fun PostCreateScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
-                        if (selectedImageUri == null && imgUiState !is ImageUiState.Loading) {
+                        if (selectedImageUri == null && imgUiState !is UploadImageUiState.Loading) {
                             FilledTonalButton(
                                 onClick = { imagePickerLauncher.launch("image/*") },
                                 shape = RoundedCornerShape(10.dp)
@@ -225,7 +234,8 @@ fun PostCreateScreen(
                         }
                     }
 
-                    if (imgUiState is ImageUiState.Loading) {
+                    // 업로드 중 표시
+                    if (imgUiState is UploadImageUiState.Loading) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -245,7 +255,8 @@ fun PostCreateScreen(
                         }
                     }
 
-                    if (selectedImageUri != null && imgUiState !is ImageUiState.Loading) {
+                    // 업로드된 이미지 미리보기
+                    if (selectedImageUri != null && imgUiState !is UploadImageUiState.Loading) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Box(
                             modifier = Modifier.fillMaxWidth()
@@ -283,6 +294,7 @@ fun PostCreateScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
+                // 작성하기 버튼 클릭 시 viewModel에서 createPost() 호출
                 onClick = {
                     val finalAuthor = author
                     val request = PostCreateRequest(
@@ -296,7 +308,7 @@ fun PostCreateScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = title.isNotBlank() && content.isNotBlank() && imgUiState !is ImageUiState.Loading,
+                enabled = title.isNotBlank() && content.isNotBlank() && imgUiState !is UploadImageUiState.Loading,
                 shape = RoundedCornerShape(16.dp),
                 elevation = ButtonDefaults.buttonElevation(
                     defaultElevation = 4.dp,

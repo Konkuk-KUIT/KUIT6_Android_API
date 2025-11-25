@@ -1,4 +1,4 @@
-package com.example.kuit6_android_api.ui.post.util
+package com.example.kuit6_android_api.ui.post.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -6,7 +6,7 @@ import android.provider.OpenableColumns
 import java.io.File
 import java.io.FileOutputStream
 
-object UriUtil {
+object UriUtils {
     fun uriToFile(context: Context, uri: Uri): File? {
         return try {
             val contentResolver = context.contentResolver

@@ -1,7 +1,9 @@
 package com.example.kuit6_android_api.data.api
 
+import com.example.kuit6_android_api.data.model.request.LoginRequest
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.BaseResponse
+import com.example.kuit6_android_api.data.model.response.LoginResponse
 import com.example.kuit6_android_api.data.model.response.PostResponse
 import okhttp3.MultipartBody
 import retrofit2.http.Body
@@ -15,34 +17,53 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
-    @GET(value = "/api/posts")
+    // 게시글 목록 조회
+    @GET("/api/posts")
     suspend fun getPosts(): BaseResponse<List<PostResponse>>
 
-    @POST(value = "/api/posts")
+    // 게시글 생성
+    @POST("/api/posts")
     suspend fun createPost(
-        @Query(value = "author") author: String = "규빈",
+        @Query("author") author: String = "규빈",
         @Body request: PostCreateRequest
     ): BaseResponse<PostResponse>
 
-    @GET(value = "/api/posts/{id}")
-    suspend fun getPostsDetail(
-        @Path(value = "id") id: Long
+    // 게시글 상세 조회
+    @GET("/api/posts/{id}")
+    suspend fun getPostDetail(
+        @Path("id") id: Long
     ): BaseResponse<PostResponse>
 
-    @PUT(value = "/api/posts/{id}")
+    // 게시글 수정
+    @PUT("/api/posts/{id}")
     suspend fun updatePost(
-        @Path(value = "id") id: Long,
+        @Path("id") id: Long,
         @Body request: PostCreateRequest
     ): BaseResponse<PostResponse>
 
-    @DELETE(value = "/api/posts/{id}")
+    // 게시글 삭제
+    @DELETE("/api/posts/{id}")
     suspend fun deletePost(
-        @Path(value = "id") id: Long
-    ): BaseResponse<PostResponse>
+        @Path("id") id: Long
+    ): BaseResponse<Unit>
 
+    // 이미지 업로드
     @Multipart
     @POST("/api/images/upload")
     suspend fun uploadImage(
         @Part file: MultipartBody.Part
     ): BaseResponse<Map<String, String>>
+
+    @POST("/api/auth/signup")
+    suspend fun signup(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
+    @POST("/api/auth/login")
+    suspend fun login(
+        @Body request: LoginRequest
+    ): BaseResponse<LoginResponse>
+
+    @GET("/api/auth/validate")
+    suspend fun validateToken(): BaseResponse<Boolean>
 }

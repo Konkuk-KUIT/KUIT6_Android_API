@@ -1,20 +1,16 @@
 package com.example.kuit6_android_api.ui.navigation
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.kuit6_android_api.ui.post.screen.LoginScreen
 import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
 import com.example.kuit6_android_api.ui.post.screen.PostListScreen
-import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostListViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.postViewModelFactory
 
 @Composable
 fun NavGraph(
@@ -33,7 +29,11 @@ fun NavGraph(
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
                 },
-                viewModel = viewModel(factory = postViewModelFactory { PostListViewModel(postRepository = it) })
+                onLoginClick = {
+                    navController.navigate(LoginRoute)
+                },
+                // 다른 뷰모델에는 이름만 바꿔서 적용
+                viewModel = hiltViewModel()
             )
         }
 
@@ -48,11 +48,7 @@ fun NavGraph(
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
                 },
-                viewModel = viewModel(factory = postViewModelFactory {
-                    PostDetailViewModel(
-                        postRepository = it
-                    )
-                })
+                viewModel = hiltViewModel()
             )
         }
 
@@ -67,11 +63,8 @@ fun NavGraph(
                         ?.set("refreshNeeded", true)
                     navController.popBackStack()
                 },
-                viewModel = viewModel(factory = postViewModelFactory {
-                    PostCreateViewModel(
-                        postRepository = it
-                    )
-                })
+                viewModel = hiltViewModel()
+
             )
         }
 
@@ -89,12 +82,19 @@ fun NavGraph(
                         ?.set("refreshNeeded", true)
                     navController.popBackStack()
                 },
-                viewModel = viewModel(factory = postViewModelFactory {
-                    PostEditViewModel(
-                        postRepository = it
-                    )
-                })
+                viewModel = hiltViewModel()
+            )
+        }
+
+        composable<LoginRoute> { backStackEntry ->
+
+            LoginScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                viewModel = hiltViewModel()
             )
         }
     }
 }
+

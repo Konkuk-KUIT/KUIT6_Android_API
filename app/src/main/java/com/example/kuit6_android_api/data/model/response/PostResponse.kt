@@ -1,14 +1,15 @@
 package com.example.kuit6_android_api.data.model.response
 
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class PostResponse(
-    @SerialName(value = "id") val id: Long,
-    @SerialName(value = "title") val title: String,
-    @SerialName(value = "content") val content: String,
-    @SerialName(value = "imageUrl") val imageUrl: String?,
-    @SerialName(value = "author") val author: AuthorResponse,
-    @SerialName(value = "createdAt") val createdAt: String,
-    @SerialName(value = "updatedAt") val updatedAt: String,
+    @SerialName("id") val id: Long,
+    @SerialName("title") val title: String,
+    @SerialName("content") val content: String,
+    @SerialName("imageUrl") val imageUrl: String?,
+    @SerialName("author") val author: AuthorResponse,
+    @SerialName("createdAt") val createdAt: String,
+    @SerialName("updatedAt") val updatedAt: String
 )
-

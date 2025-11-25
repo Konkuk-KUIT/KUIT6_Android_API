@@ -1,11 +1,12 @@
 package com.example.kuit6_android_api.ui.navigation
 
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.kuit6_android_api.ui.post.screen.LoginScreen
 import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
@@ -14,8 +15,7 @@ import com.example.kuit6_android_api.ui.post.screen.PostListScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: Any = PostListRoute,
-    snackBarState: SnackbarHostState
+    startDestination: Any = PostListRoute
 ) {
     NavHost(
         navController = navController,
@@ -28,7 +28,12 @@ fun NavGraph(
                 },
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
-                }
+                },
+                onLoginClick = {
+                    navController.navigate(LoginRoute)
+                },
+                // 다른 뷰모델에는 이름만 바꿔서 적용
+                viewModel = hiltViewModel()
             )
         }
 
@@ -43,7 +48,7 @@ fun NavGraph(
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
                 },
-                snackBarState
+                viewModel = hiltViewModel()
             )
         }
 
@@ -53,9 +58,13 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onPostCreated = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("refreshNeeded", true)
                     navController.popBackStack()
                 },
-                snackBarHost = snackBarState
+                viewModel = hiltViewModel()
+
             )
         }
 
@@ -68,10 +77,24 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onPostUpdated = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("refreshNeeded", true)
                     navController.popBackStack()
                 },
-                snackbarHost = snackBarState
+                viewModel = hiltViewModel()
+            )
+        }
+
+        composable<LoginRoute> { backStackEntry ->
+
+            LoginScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                viewModel = hiltViewModel()
             )
         }
     }
 }
+

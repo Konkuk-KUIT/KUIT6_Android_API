@@ -25,14 +25,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,13 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.state.PostDetailUiState
+import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
 import com.example.kuit6_android_api.util.formatDateTime
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,15 +55,14 @@ fun PostDetailScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onEditClick: (Long) -> Unit = {},
-    snackBarState : SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostDetailViewModel = hiltViewModel()
 ) {
-    val post = viewModel.postDetail
+    val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(postId) {
-        viewModel.getPostDetail(postId)
+        viewModel.loadDetail(postId)
     }
 
     Scaffold(
@@ -88,9 +85,13 @@ fun PostDetailScreen(
             )
         }
     ) { paddingValues ->
-        post?.let {
-
-            Column(
+        when (uiState) {
+            is PostDetailUiState.Loading -> {
+                // 로딩 표시는 필요시 추가
+            }
+            is PostDetailUiState.Success -> {
+                val post = (uiState as PostDetailUiState.Success).post
+                Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
@@ -110,9 +111,9 @@ fun PostDetailScreen(
                             .padding(16.dp)
                     ) {
                         // 프로필 이미지
-                        if (it.author.profileImageUrl != null) {
+                        if (post.author.profileImageUrl != null) {
                             AsyncImage(
-                                model = it.author.profileImageUrl,
+                                model = post.author.profileImageUrl,
                                 contentDescription = "프로필 이미지",
                                 modifier = Modifier
                                     .size(44.dp)
@@ -138,14 +139,14 @@ fun PostDetailScreen(
 
                         Column {
                             Text(
-                                text = it.author.username,
+                                text = post.author.username,
                                 style = MaterialTheme.typography.bodyLarge.copy(
                                     fontWeight = FontWeight.SemiBold
                                 ),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                text = formatDateTime(it.createdAt),
+                                text = formatDateTime(post.createdAt),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -154,7 +155,7 @@ fun PostDetailScreen(
                 }
 
                 // 이미지
-                it.imageUrl?.let { imageUrl ->
+                post.imageUrl?.let { imageUrl ->
                     AsyncImage(
                         model = imageUrl,
                         contentDescription = "게시글 이미지",
@@ -170,7 +171,7 @@ fun PostDetailScreen(
                     modifier = Modifier.padding(20.dp)
                 ) {
                     Text(
-                        text = it.title,
+                        text = post.title,
                         style = MaterialTheme.typography.headlineSmall.copy(
                             fontWeight = FontWeight.Bold
                         ),
@@ -180,7 +181,7 @@ fun PostDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = it.content,
+                        text = post.content,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         lineHeight = MaterialTheme.typography.bodyLarge.lineHeight.times(1.5f)
@@ -188,6 +189,10 @@ fun PostDetailScreen(
 
                     Spacer(modifier = Modifier.height(40.dp))
                 }
+            }
+            }
+            is PostDetailUiState.Error -> {
+                // 에러 표시는 필요시 추가
             }
         }
     }
@@ -200,13 +205,9 @@ fun PostDetailScreen(
             text = { Text("정말로 이 게시글을 삭제하시겠습니까?") },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.deletePost(postId) {
-                        showDeleteDialog = false
-                        onNavigateBack()
-                        scope.launch{
-                            snackBarState.showSnackbar("게시글이 삭제되었습니다. ")
-                        }
-                    }
+                    viewModel.deletePost(postId)
+                    showDeleteDialog = false
+                    onNavigateBack()
                 }) {
                     Text("삭제")
                 }
@@ -216,20 +217,6 @@ fun PostDetailScreen(
                     Text("취소")
                 }
             }
-        )
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun PostDetailScreenPreview() {
-    MaterialTheme {
-        PostDetailScreen(
-            postId = 1L,
-            onNavigateBack = {},
-            onEditClick = {},
-            snackBarState = remember{ SnackbarHostState() }
         )
     }
 }

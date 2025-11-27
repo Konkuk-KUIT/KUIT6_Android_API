@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.kuit6_android_api.ui.navigation.LoginRoute
 import com.example.kuit6_android_api.ui.post.component.PostItem
@@ -39,7 +40,7 @@ fun PostListScreen(
     onPostClick: (Long) -> Unit,
     onCreatePostClick: () -> Unit,
     onLoginClick: () -> Unit,
-    viewModel: PostListViewModel
+    viewModel: PostListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.postListUiState.collectAsState()
 

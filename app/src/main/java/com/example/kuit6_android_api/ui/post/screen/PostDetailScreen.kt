@@ -43,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.example.kuit6_android_api.ui.post.state.PostDetailUiState
 import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
@@ -54,7 +55,7 @@ fun PostDetailScreen(
     postId: Long,
     onNavigateBack: () -> Unit,
     onEditClick: (Long) -> Unit = {},
-    viewModel: PostDetailViewModel 
+    viewModel: PostDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }

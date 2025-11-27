@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 
@@ -45,7 +46,7 @@ import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
-    viewModel: PostCreateViewModel
+    viewModel: PostCreateViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var author by remember { mutableStateOf("") }

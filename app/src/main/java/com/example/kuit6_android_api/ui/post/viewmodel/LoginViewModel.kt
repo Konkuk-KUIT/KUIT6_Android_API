@@ -5,19 +5,24 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kuit6_android_api.data.repository.LoginRepository
+import com.example.kuit6_android_api.data.repository.TokenApiRepository
 import com.example.kuit6_android_api.data.repository.TokenRepository
 import com.example.kuit6_android_api.ui.post.state.LoginUiState
 import com.example.kuit6_android_api.ui.post.state.TokenValidationResult
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class LoginViewModel(
+@HiltViewModel
+class LoginViewModel @Inject constructor(
     private val loginRepository: LoginRepository,
-    private val tokenRepository: TokenRepository
+    private val tokenRepository: TokenRepository,
+    private val tokenApiRepository: TokenApiRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -39,7 +44,7 @@ class LoginViewModel(
         _uiState.update { it.copy(isAutoLogin = isAutoLogin) }
         // DataStore에 자동 로그인 설정 저장
         viewModelScope.launch {
-            tokenRepository.saveAutoLogin(context, isAutoLogin)
+            tokenRepository.saveAutoLogin(isAutoLogin)
         }
     }
 
@@ -49,7 +54,7 @@ class LoginViewModel(
                 id = uiState.value.id,
                 password = uiState.value.password
             ).onSuccess {
-                tokenRepository.saveToken(context, it.token)
+                tokenRepository.saveToken(it.token)
             }
         }
     }
@@ -60,7 +65,7 @@ class LoginViewModel(
                 id = uiState.value.id,
                 password = uiState.value.password
             ).onSuccess {
-                tokenRepository.saveToken(context, it.token)
+                tokenRepository.saveToken(it.token)
                 // 로그인 성공 시 자동 로그인이 체크되어 있으면 자동 토큰 검증 실행
                 if (uiState.value.isAutoLogin) {
                     validateToken(context)
@@ -71,13 +76,14 @@ class LoginViewModel(
 
     fun getToken(context: Context){
         viewModelScope.launch{
-            val token = tokenRepository.getToken(context)
+            val token = tokenRepository.getToken()
             _uiState.update{it.copy(token = token ?: "")}
         }
     }
 
     fun validateToken(context: Context) {
         viewModelScope.launch {
+            val result =  tokenApiRepository.validateToken()
             _uiState.update { it.copy(isTokenValidating = true, tokenValidationResult = null) }
             
             loginRepository.validateToken()
@@ -110,7 +116,7 @@ class LoginViewModel(
 
     fun loadAutoLoginSetting(context: Context) {
         viewModelScope.launch {
-            val isAutoLogin = tokenRepository.getAutoLogin(context)
+            val isAutoLogin = tokenRepository.getAutoLogin()
             _uiState.update { it.copy(isAutoLogin = isAutoLogin) }
             
             // 자동 로그인이 활성화되어 있으면 자동으로 토큰 검증 실행

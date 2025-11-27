@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.compose.compiler)
+    alias(libs.plugins.hilt)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -25,7 +27,7 @@ android {
         if (localPropertiesFile.exists()) {
             properties.load(localPropertiesFile.inputStream())
         }
-        val baseUrl = properties.getProperty("BASE_URL") ?: "http://10.0.2.2:8080/"
+        val baseUrl = properties.getProperty("BASE_URL")
         buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
     }
 
@@ -79,7 +81,6 @@ dependencies {
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore.preferences)
-    //implementation(libs.adapter.guava)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -87,8 +88,17 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
+    // Retrofit & OkHttp
     implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
+    implementation(libs.retrofit.converter.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging.interceptor)
+
+    // hilt
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.core)
+    implementation(libs.hilt.navigation.compose)
+    ksp(libs.hilt.android.compiler)
+    ksp(libs.hilt.compiler)
+    ksp(libs.hilt.manager)
 }

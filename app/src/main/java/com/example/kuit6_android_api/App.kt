@@ -1,13 +1,19 @@
 package com.example.kuit6_android_api
 
 import android.app.Application
-import com.example.kuit6_android_api.data.di.AppContainer
+import dagger.hilt.android.HiltAndroidApp
 
+@HiltAndroidApp
+//앱 컨테이너 = 수동 주입은 지워도 된다.
 class App : Application() {
-    lateinit var container: AppContainer
 
     override fun onCreate() {
         super.onCreate()
-        container = AppContainer(this)
+        instance = this
+    }
+
+    companion object {
+        lateinit var instance: App
+        private set
     }
 }

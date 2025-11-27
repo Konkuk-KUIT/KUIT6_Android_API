@@ -15,7 +15,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
@@ -23,8 +22,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.kuit6_android_api.ui.navigation.NavGraph
 import com.example.kuit6_android_api.ui.navigation.PostListRoute
 import com.example.kuit6_android_api.ui.theme.KUIT6_Android_APITheme
+import dagger.hilt.android.AndroidEntryPoint
 
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     // 권한 요청 런처

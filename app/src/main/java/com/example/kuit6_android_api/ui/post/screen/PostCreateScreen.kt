@@ -46,8 +46,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModel
+import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,10 +56,8 @@ import kotlinx.coroutines.launch
 fun PostCreateScreen(
     onNavigateBack: () -> Unit,
     onPostCreated: () -> Unit,
-    snackBarState: SnackbarHostState,
-    viewModel: PostViewModel = viewModel()
+    viewModel: PostCreateViewModel = hiltViewModel()
 ) {
-    val context = LocalContext.current
     var author by remember { mutableStateOf("") }
     var title by remember { mutableStateOf("") }
     var content by remember { mutableStateOf("") }
@@ -119,7 +118,6 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 제목 입력
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -136,7 +134,6 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 내용 입력
             OutlinedTextField(
                 value = content,
                 onValueChange = { content = it },
@@ -155,7 +152,6 @@ fun PostCreateScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 이미지 섹션
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -195,11 +191,8 @@ fun PostCreateScreen(
 
             Button(
                 onClick = {
-                    val finalAuthor = author
-                    viewModel.createPost(finalAuthor, title, content, null) {
-                        onPostCreated()
-                        scope.launch { snackBarState.showSnackbar("게시글이 작성되었습니다.") }
-                    }
+                    val finalAuthor = if (author.isBlank()) "anonymous" else author
+                    viewModel.createPost(finalAuthor, title, content, null)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -235,8 +228,7 @@ fun PostCreateScreenPreview() {
     MaterialTheme {
         PostCreateScreen(
             onNavigateBack = {},
-            onPostCreated = {},
-            snackBarState = remember { SnackbarHostState() }
+            onPostCreated = {}
         )
     }
 }

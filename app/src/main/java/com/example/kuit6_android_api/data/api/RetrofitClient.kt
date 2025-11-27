@@ -1,6 +1,9 @@
 package com.example.kuit6_android_api.data.api
 
+import com.example.kuit6_android_api.App
 import com.example.kuit6_android_api.BuildConfig
+import com.example.kuit6_android_api.data.repository.TokenRepositoryImpl
+import com.example.kuit6_android_api.data.service.ApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -13,7 +16,14 @@ object RetrofitClient { // 싱글톤
         level = HttpLoggingInterceptor.Level.BODY
     }
 
+    private val authInterceptor by lazy {
+        AuthInterceptor(
+            context = App.instance,
+            tokenRepository = TokenRepositoryImpl()
+        )
+    }
     private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(authInterceptor)
         .addInterceptor(loggingInterceptor)
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)

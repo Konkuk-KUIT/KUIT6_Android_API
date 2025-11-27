@@ -3,7 +3,7 @@ package com.example.kuit6_android_api.ui.post.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kuit6_android_api.data.repository.PostRepository
-import com.example.kuit6_android_api.ui.post.state.PostListUiState
+import com.example.kuit6_android_api.ui.post.state.PostListUIState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,8 +12,8 @@ import kotlinx.coroutines.launch
 class PostListViewModel(
     private val postRepository: PostRepository
 ): ViewModel(){
-    private val _uiState = MutableStateFlow<PostListUiState>(PostListUiState.Loading)
-    val uiState: StateFlow<PostListUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow<PostListUIState>(PostListUIState.Loading)
+    val uiState: StateFlow<PostListUIState> = _uiState.asStateFlow()
 
     init {
         loadPosts()
@@ -21,14 +21,14 @@ class PostListViewModel(
 
     private fun loadPosts(){
         viewModelScope.launch {
-            _uiState.value = PostListUiState.Loading
+            _uiState.value = PostListUIState.Loading
 
             postRepository.getPosts()
                 .onSuccess { posts->
-                    _uiState.value = PostListUiState.Success(posts)
+                    _uiState.value = PostListUIState.Success(posts)
                 }
                 .onFailure { error->
-                    _uiState.value = PostListUiState.Error(
+                    _uiState.value = PostListUIState.Error(
                         message = error.message ?: "error"
                     )
                 }

@@ -4,8 +4,11 @@ import android.util.Log
 import com.example.kuit6_android_api.data.api.ApiService
 import com.example.kuit6_android_api.data.model.request.PostCreateRequest
 import com.example.kuit6_android_api.data.model.response.PostResponse
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class PostRepositoryImpl(
+@Singleton
+class PostRepositoryImpl @Inject constructor(
     private val apiService: ApiService
 ): PostRepository{
     override suspend fun getPosts(): Result<List<PostResponse>> {

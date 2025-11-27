@@ -2,36 +2,28 @@ package com.example.kuit6_android_api.ui.navigation
 
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import com.example.kuit6_android_api.ui.post.screen.LoginScreen
 import com.example.kuit6_android_api.ui.post.screen.PostCreateScreen
 import com.example.kuit6_android_api.ui.post.screen.PostDetailScreen
 import com.example.kuit6_android_api.ui.post.screen.PostEditScreen
 import com.example.kuit6_android_api.ui.post.screen.PostListScreen
-import com.example.kuit6_android_api.ui.post.viewmodel.PostCreateViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostDetailViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostEditViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostListViewModel
-import com.example.kuit6_android_api.ui.post.viewmodel.PostViewModelFactory
 
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    startDestination: Any = PostListRoute,
-    snackBarState: SnackbarHostState
+    startDestination: Any = PostListRoute
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
         composable<PostListRoute> {
-            val listViewModel: PostListViewModel = viewModel(
-                factory = PostViewModelFactory { PostListViewModel(it) }
-            )
-
             PostListScreen(
                 onPostClick = { postId ->
                     navController.navigate(PostDetailRoute(postId))
@@ -39,19 +31,16 @@ fun NavGraph(
                 onCreatePostClick = {
                     navController.navigate(PostCreateRoute)
                 },
-                viewModel = listViewModel
+                onLoginClick = {
+                    navController.navigate(LoginRoute)
+                },
+                viewModel = hiltViewModel()
             )
         }
 
         composable<PostDetailRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<PostDetailRoute>()
-            val detailViewModel: PostDetailViewModel = viewModel(
-                factory = PostViewModelFactory { PostDetailViewModel(it) }
-            )
 
-            val editViewModel: PostEditViewModel = viewModel(
-                factory = PostViewModelFactory { PostEditViewModel(it) }
-            )
             PostDetailScreen(
                 postId = route.postId,
                 onNavigateBack = {
@@ -60,17 +49,11 @@ fun NavGraph(
                 onEditClick = { postId ->
                     navController.navigate(PostEditRoute(postId))
                 },
-                snackBarState = snackBarState,
-                detailViewModel=detailViewModel,
-                editViewModel=editViewModel
+                viewModel = hiltViewModel()
             )
         }
 
         composable<PostCreateRoute> {
-            val createViewModel: PostCreateViewModel = viewModel(
-                factory = PostViewModelFactory { PostCreateViewModel(it) }
-            )
-
             PostCreateScreen(
                 onNavigateBack = {
                     navController.popBackStack()
@@ -78,20 +61,12 @@ fun NavGraph(
                 onPostCreated = {
                     navController.popBackStack()
                 },
-                snackBarState = snackBarState,
-                postCreateViewModel = createViewModel
+                viewModel = hiltViewModel()
             )
         }
 
         composable<PostEditRoute> { backStackEntry ->
             val route = backStackEntry.toRoute<PostEditRoute>()
-            val detailViewModel: PostDetailViewModel = viewModel(
-                factory = PostViewModelFactory { PostDetailViewModel(it) }
-            )
-
-            val editViewModel: PostEditViewModel = viewModel(
-                factory = PostViewModelFactory { PostEditViewModel(it) }
-            )
 
             PostEditScreen(
                 postId = route.postId,
@@ -99,11 +74,23 @@ fun NavGraph(
                     navController.popBackStack()
                 },
                 onPostUpdated = {
+                    navController.previousBackStackEntry
+                        ?.savedStateHandle
+                        ?.set("refreshNeeded",true)
                     navController.popBackStack()
                 },
-                snackBarState = snackBarState,
-                editViewModel = editViewModel,
-                detailViewModel = detailViewModel
+                viewModel = hiltViewModel()
+            )
+        }
+
+        composable<LoginRoute> {backStackEntry ->
+            val route = backStackEntry.toRoute<LoginRoute>()
+
+            LoginScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                viewModel = hiltViewModel()
             )
         }
     }

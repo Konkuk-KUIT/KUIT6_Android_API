@@ -8,5 +8,5 @@ data class BaseResponse<T>(
     @SerialName("success") val success: Boolean,
     @SerialName("message") val message: String?,
     @SerialName("data") val data: T?,
-    @SerialName("timestamp") val timestamp: String? = null
+    @SerialName("timestamp") val timestamp: String? = null,
 )
